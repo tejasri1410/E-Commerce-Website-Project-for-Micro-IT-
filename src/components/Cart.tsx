@@ -102,7 +102,7 @@ const FloatingCart: React.FC = () => {
 };
 
 const CartContent: React.FC = () => {
-  const { items, updateQuantity, removeFromCart, subtotal, clearCart } = useCart();
+  const { cartItems, updateQuantity, removeFromCart, totalPrice, clearCart } = useCart();
 
   return (
     <SheetContent className="w-full sm:max-w-md overflow-y-auto">
@@ -112,7 +112,7 @@ const CartContent: React.FC = () => {
         </SheetTitle>
       </SheetHeader>
       
-      {items.length === 0 ? (
+      {cartItems.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-[60vh]">
           <ShoppingCart className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
           <h3 className="font-medium text-lg">Your cart is empty</h3>
@@ -124,14 +124,14 @@ const CartContent: React.FC = () => {
         <>
           <ScrollArea className="flex-1 my-6 max-h-[50vh]">
             <div className="space-y-1">
-              {items.map((item) => (
+              {cartItems.map((item) => (
                 <CartItemRow
-                  key={item.id}
-                  id={item.id}
-                  name={item.name}
-                  price={item.price}
+                  key={item.product.id}
+                  id={item.product.id}
+                  name={item.product.name}
+                  price={item.product.price}
                   quantity={item.quantity}
-                  image={item.image}
+                  image={item.product.image}
                   updateQuantity={updateQuantity}
                   removeItem={removeFromCart}
                 />
@@ -144,7 +144,7 @@ const CartContent: React.FC = () => {
           <div className="space-y-4 mt-6">
             <div className="flex items-center justify-between">
               <span className="font-medium">Subtotal</span>
-              <span className="font-semibold">${subtotal.toFixed(2)}</span>
+              <span className="font-semibold">${totalPrice.toFixed(2)}</span>
             </div>
             
             <p className="text-xs text-muted-foreground">
