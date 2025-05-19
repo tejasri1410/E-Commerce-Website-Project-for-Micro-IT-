@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Eye, ShoppingCart } from "lucide-react";
+import { Eye, ExternalLink, ShoppingCart } from "lucide-react";
 import { useCart, Product } from "@/context/CartContext";
+import { Link } from "react-router-dom";
 
 interface ProductCardProps {
   product: Product;
@@ -71,13 +72,25 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isNew = false, isSal
                     </p>
                   </div>
                   <p className="text-muted-foreground">{product.description}</p>
-                  <Button 
-                    className="mt-auto animate-fade-in" 
-                    onClick={() => addToCart(product)}
-                  >
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    Add to Cart
-                  </Button>
+                  <div className="flex gap-2 mt-auto">
+                    <Button 
+                      className="animate-fade-in" 
+                      onClick={() => addToCart(product)}
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Add to Cart
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="animate-fade-in" 
+                      asChild
+                    >
+                      <Link to={`/product/${product.id}`}>
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Details
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </div>
             </DialogContent>
@@ -91,6 +104,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isNew = false, isSal
             <ShoppingCart className="h-4 w-4" />
             <span className="sr-only">Add to cart</span>
           </Button>
+          
+          <Button 
+            size="icon" 
+            variant="default"
+            className="rounded-full animate-fade-in"
+            asChild
+          >
+            <Link to={`/category/${product.category.toLowerCase()}`}>
+              <ExternalLink className="h-4 w-4" />
+              <span className="sr-only">View category</span>
+            </Link>
+          </Button>
         </div>
       </div>
       
@@ -101,15 +126,25 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isNew = false, isSal
       
       <CardFooter className="p-4 pt-0 flex justify-between items-center">
         <span className="font-semibold">${product.price.toFixed(2)}</span>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 text-xs rounded-full hover:bg-primary hover:text-primary-foreground"
-          onClick={() => addToCart(product)}
-        >
-          <ShoppingCart className="h-3 w-3 mr-1" />
-          Add to Cart
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-xs rounded-full hover:bg-primary hover:text-primary-foreground"
+            onClick={() => addToCart(product)}
+          >
+            <ShoppingCart className="h-3 w-3 mr-1" />
+            Add
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs rounded-full hover:bg-secondary hover:text-secondary-foreground"
+            asChild
+          >
+            <Link to={`/product/${product.id}`}>View</Link>
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

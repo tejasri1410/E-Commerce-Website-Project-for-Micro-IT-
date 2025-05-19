@@ -9,9 +9,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Search, ChevronDown } from "lucide-react";
+import { ShoppingCart, Search, ChevronDown, LayoutGrid } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useCart } from "@/context/CartContext";
+import { Link, useNavigate } from "react-router-dom";
+import { getCategories } from "@/services/productService";
 
 interface NavbarProps {
   searchQuery: string;
@@ -19,8 +21,6 @@ interface NavbarProps {
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
 }
-
-const CATEGORIES = ["All", "Electronics", "Clothing", "Accessories", "Footwear", "Home", "Bags"];
 
 const Navbar: React.FC<NavbarProps> = ({
   searchQuery,
@@ -33,6 +33,9 @@ const Navbar: React.FC<NavbarProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  const CATEGORIES = ["All", ...getCategories()];
 
   // Check if user has scrolled
   useEffect(() => {
@@ -56,6 +59,17 @@ const Navbar: React.FC<NavbarProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Handle category selection
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
+    
+    if (category === "All") {
+      navigate("/categories");
+    } else {
+      navigate(`/category/${category.toLowerCase()}`);
+    }
+  };
+
   return (
     <header
       className={`sticky top-0 z-50 w-full transition-all duration-200 ${
@@ -67,9 +81,9 @@ const Navbar: React.FC<NavbarProps> = ({
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
-            <a href="/" className="text-xl font-bold tracking-tight">
+            <Link to="/" className="text-xl font-bold tracking-tight">
               Chroma<span className="text-primary">Shop</span>
-            </a>
+            </Link>
           </div>
 
           <div className="hidden md:flex md:items-center md:gap-4">
@@ -107,6 +121,17 @@ const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
+            <Button 
+              variant="outline" 
+              className="gap-1"
+              asChild
+            >
+              <Link to="/categories">
+                <LayoutGrid className="h-4 w-4 mr-1" />
+                All
+              </Link>
+            </Button>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="gap-1">
@@ -118,7 +143,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 {CATEGORIES.map((category) => (
                   <DropdownMenuItem
                     key={category}
-                    onClick={() => setSelectedCategory(category)}
+                    onClick={() => handleCategorySelect(category)}
                     className="cursor-pointer"
                   >
                     {category}
@@ -209,15 +234,26 @@ const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             <div className="space-y-2">
-              <div className="text-sm font-medium">Categories</div>
+              <Button 
+                variant="outline"
+                className="w-full justify-start"
+                asChild
+              >
+                <Link to="/categories">
+                  <LayoutGrid className="h-4 w-4 mr-2" />
+                  All Categories
+                </Link>
+              </Button>
+              
+              <div className="text-sm font-medium mt-4">Categories</div>
               <div className="grid grid-cols-2 gap-2">
-                {CATEGORIES.map((category) => (
+                {CATEGORIES.filter(cat => cat !== "All").map((category) => (
                   <Button
                     key={category}
                     variant={selectedCategory === category ? "default" : "outline"}
                     size="sm"
                     onClick={() => {
-                      setSelectedCategory(category);
+                      handleCategorySelect(category);
                       setIsMobileMenuOpen(false);
                     }}
                     className="justify-start"

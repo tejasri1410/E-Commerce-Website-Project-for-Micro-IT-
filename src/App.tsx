@@ -8,6 +8,9 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { CartProvider } from "@/context/CartContext";
+import CategoryPage from "./pages/CategoryPage";
+import ProductDetail from "./pages/ProductDetail";
+import AllCategories from "./pages/AllCategories";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +24,9 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/category/:categoryName" element={<CategoryPage />} />
+              <Route path="/product/:productId" element={<ProductDetail />} />
+              <Route path="/categories" element={<AllCategories />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
