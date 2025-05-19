@@ -1,7 +1,16 @@
-
 import { Product } from "@/context/CartContext";
 
-export const ALL_PRODUCTS: Product[] = [
+export interface ColorVariant {
+  name: string;
+  image: string;
+  stock: number;
+}
+
+export interface ProductWithVariants extends Product {
+  colors?: ColorVariant[];
+}
+
+export const ALL_PRODUCTS: ProductWithVariants[] = [
   {
     id: "1",
     name: "Minimalist Watch",
@@ -9,7 +18,12 @@ export const ALL_PRODUCTS: Product[] = [
     image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
     category: "Accessories",
     description: "Elegant minimalist watch with leather strap and premium materials.",
-    stock: 12
+    stock: 12,
+    colors: [
+      { name: "Black", image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30", stock: 7 },
+      { name: "Brown", image: "https://images.unsplash.com/photo-1524805444758-089113d48a6d", stock: 3 },
+      { name: "Silver", image: "https://images.unsplash.com/photo-1508057198894-247b23fe5ade", stock: 2 }
+    ]
   },
   {
     id: "2",
@@ -18,7 +32,12 @@ export const ALL_PRODUCTS: Product[] = [
     image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
     category: "Electronics",
     description: "Premium wireless headphones with active noise cancellation and 30-hour battery life.",
-    stock: 8
+    stock: 8,
+    colors: [
+      { name: "Black", image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e", stock: 3 },
+      { name: "White", image: "https://images.unsplash.com/photo-1577174881658-0f30ed549adc", stock: 4 },
+      { name: "Red", image: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb", stock: 1 }
+    ]
   },
   {
     id: "3",
@@ -118,13 +137,13 @@ export const getCategories = (): string[] => {
   return Array.from(categoriesSet);
 };
 
-export const getProductsByCategory = (category: string): Product[] => {
+export const getProductsByCategory = (category: string): ProductWithVariants[] => {
   return ALL_PRODUCTS.filter(product => 
     product.category.toLowerCase() === category.toLowerCase()
   );
 };
 
-export const getProductById = (id: string): Product | undefined => {
+export const getProductById = (id: string): ProductWithVariants | undefined => {
   return ALL_PRODUCTS.find(product => product.id === id);
 };
 

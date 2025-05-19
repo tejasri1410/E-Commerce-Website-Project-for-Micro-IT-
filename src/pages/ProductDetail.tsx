@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Product, useCart } from "@/context/CartContext";
-import { getProductById, getStockStatus } from "@/services/productService";
+import { getProductById, getStockStatus, ColorVariant, ProductWithVariants } from "@/services/productService";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,12 +17,23 @@ import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, AlertTriangle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import FloatingCart from "@/components/Cart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const ProductDetail: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ProductWithVariants | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [selectedColorIndex, setSelectedColorIndex] = useState<number>(0);
   const { addToCart } = useCart();
+  const [imageTransition, setImageTransition] = useState<boolean>(false);
 
   useEffect(() => {
     if (productId) {
@@ -33,6 +44,56 @@ const ProductDetail: React.FC = () => {
       setLoading(false);
     }
   }, [productId]);
+
+  const handleColorChange = (index: number) => {
+    if (index === selectedColorIndex) return;
+    
+    // Trigger fade out
+    setImageTransition(true);
+    
+    setTimeout(() => {
+      // Update color after fade out
+      setSelectedColorIndex(index);
+      
+      // Trigger fade in
+      setImageTransition(false);
+    }, 200);
+  };
+
+  const getCurrentVariant = (): ColorVariant | null => {
+    if (!product?.colors || product.colors.length === 0) return null;
+    return product.colors[selectedColorIndex];
+  };
+
+  const getCurrentStock = (): number => {
+    const variant = getCurrentVariant();
+    if (variant) return variant.stock;
+    return product?.stock || 0;
+  };
+
+  const getCurrentImage = (): string => {
+    const variant = getCurrentVariant();
+    if (variant) return variant.image;
+    return product?.image || "";
+  };
+
+  const handleAddToCart = () => {
+    if (product) {
+      const currentVariant = getCurrentVariant();
+      
+      const productToAdd: Product = {
+        ...product,
+        stock: getCurrentStock(),
+        image: getCurrentImage(),
+        // Add selected color to the product name if there is a color variant
+        name: currentVariant 
+          ? `${product.name} - ${currentVariant.name}` 
+          : product.name
+      };
+      
+      addToCart(productToAdd);
+    }
+  };
 
   if (loading) {
     return (
@@ -56,11 +117,10 @@ const ProductDetail: React.FC = () => {
     );
   }
 
-  const stockStatus = product.stock !== undefined 
-    ? getStockStatus(product.stock)
-    : { text: "In Stock", color: "success" };
-
-  const isOutOfStock = product.stock === 0;
+  const currentStock = getCurrentStock();
+  const stockStatus = getStockStatus(currentStock);
+  const isOutOfStock = currentStock === 0;
+  const hasColorVariants = product.colors && product.colors.length > 1;
 
   return (
     <div className="min-h-screen gradient-bg">
@@ -103,22 +163,24 @@ const ProductDetail: React.FC = () => {
         <Card className="p-6 lg:p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="relative overflow-hidden rounded-lg">
-              <img 
-                src={product.image} 
-                alt={product.name} 
-                className="w-full h-auto object-cover aspect-square"
-              />
+              <div className={`transition-opacity duration-200 ${imageTransition ? "opacity-0" : "opacity-100"}`}>
+                <img 
+                  src={getCurrentImage()}
+                  alt={`${product.name} ${getCurrentVariant()?.name || ""}`}
+                  className="w-full h-auto object-cover aspect-square"
+                />
+              </div>
               
-              {product.stock !== undefined && product.stock < 5 && product.stock > 0 && (
+              {currentStock !== undefined && currentStock < 5 && currentStock > 0 && (
                 <Badge 
                   className="absolute top-4 left-4 px-3 py-1.5 text-sm bg-yellow-600"
                 >
                   <AlertTriangle className="h-4 w-4 mr-1" />
-                  Low Stock: Only {product.stock} left
+                  Low Stock: Only {currentStock} left
                 </Badge>
               )}
               
-              {product.stock === 0 && (
+              {currentStock === 0 && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                   <Badge 
                     className="px-4 py-2 text-lg bg-destructive"
@@ -149,6 +211,39 @@ const ProductDetail: React.FC = () => {
                 </Badge>
               </div>
               
+              {hasColorVariants && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium mb-2">Color Options</h3>
+                  
+                  <RadioGroup 
+                    defaultValue={product.colors![0].name} 
+                    className="flex flex-wrap gap-3"
+                    onValueChange={(value) => {
+                      const index = product.colors!.findIndex(c => c.name === value);
+                      if (index !== -1) handleColorChange(index);
+                    }}
+                  >
+                    {product.colors!.map((color, index) => (
+                      <div key={color.name} className="flex items-center space-x-2">
+                        <RadioGroupItem 
+                          value={color.name} 
+                          id={`color-${color.name}`}
+                          disabled={color.stock === 0}
+                        />
+                        <Label 
+                          htmlFor={`color-${color.name}`}
+                          className={`cursor-pointer ${color.stock === 0 ? 'text-gray-400' : ''}`}
+                        >
+                          {color.name} 
+                          {color.stock === 0 && " (Out of Stock)"} 
+                          {color.stock > 0 && color.stock < 5 && ` (Only ${color.stock} left)`}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+              )}
+              
               <p className="text-3xl font-bold mb-6">
                 ${product.price.toFixed(2)}
               </p>
@@ -163,7 +258,7 @@ const ProductDetail: React.FC = () => {
               <div className="mt-auto space-y-4">
                 <Button 
                   className="w-full" 
-                  onClick={() => addToCart(product)}
+                  onClick={handleAddToCart}
                   disabled={isOutOfStock}
                 >
                   <ShoppingCart className="mr-2 h-4 w-4" />
@@ -174,7 +269,7 @@ const ProductDetail: React.FC = () => {
                   variant="outline"
                   className="w-full" 
                   onClick={() => {
-                    addToCart(product);
+                    handleAddToCart();
                     // Navigate to checkout (could be implemented later)
                   }}
                   disabled={isOutOfStock}
